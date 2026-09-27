@@ -5,6 +5,8 @@
 
 > 5-second security sanity check for K8s clusters. Zero dependencies beyond `kubectl` + `jq`.
 
+**60s proof:** with a working `kubectl` context, the one-liner prints privileged / non-root / limits / default-ns findings (and optionally writes `kube-simple-audit-report.md`) in under a minute.
+
 **Kube-Simple-Audit** is a lightweight Bash lead-magnet for the Secure K3s Starter hub. It flags common misconfigurations and writes a **Markdown report** you can paste into tickets or GitHub Step Summary.
 
 [https://run-as-daemon.dev](https://run-as-daemon.dev) | [GitHub @ranas-mukminov](https://github.com/ranas-mukminov) | [Secure-K3s-GitOps-Template](https://github.com/ranas-mukminov/Secure-K3s-GitOps-Template)
