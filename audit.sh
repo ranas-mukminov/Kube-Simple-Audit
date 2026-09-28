@@ -59,8 +59,9 @@ NO_LIMITS_SAMPLES=""
 DEFAULT_SAMPLES=""
 
 echo -e "\n${YELLOW}[1/4] Checking for Privileged Pods...${NC}"
+# Include initContainers / ephemeralContainers — privileged sidecars otherwise hide.
 PRIVILEGED=$(kubectl get pods --all-namespaces -o json \
-  | jq -r '.items[] | select(.spec.containers[]?.securityContext.privileged == true) | "\(.metadata.namespace)/\(.metadata.name)"' \
+  | jq -r '.items[] | select(any((.spec.containers + (.spec.initContainers // []) + (.spec.ephemeralContainers // []))[]?; .securityContext.privileged == true)) | "\(.metadata.namespace)/\(.metadata.name)"' \
   | sort -u || true)
 if [[ -z "$PRIVILEGED" ]]; then
   echo -e "${GREEN}✅ No privileged pods found.${NC}"
@@ -73,17 +74,20 @@ else
 fi
 
 echo -e "\n${YELLOW}[2/4] Checking for Root Containers...${NC}"
+# Prefer runAsUser when set: runAsUser>0 without runAsNonRoot is not "potential root".
 ROOT_PODS=$(kubectl get pods --all-namespaces -o json \
   | jq -r '.items[] | select(
-      (.spec.securityContext.runAsNonRoot != true) and
-      (all(.spec.containers[]?; .securityContext.runAsNonRoot != true))
+      ((.spec.securityContext.runAsNonRoot != true) and ((.spec.securityContext.runAsUser // 0) == 0))
+      and (all((.spec.containers + (.spec.initContainers // []))[]?;
+            (.securityContext.runAsNonRoot != true)
+            and ((.securityContext.runAsUser // 0) == 0)))
     ) | "\(.metadata.namespace)/\(.metadata.name)"' \
   | sort -u || true)
 if [[ -z "$ROOT_PODS" ]]; then
   echo -e "${GREEN}✅ No obvious root containers found (based on securityContext).${NC}"
 else
   ROOT_COUNT=$(printf '%s\n' "$ROOT_PODS" | grep -c . || true)
-  echo -e "${RED}❌ Found pods potentially running as root (missing runAsNonRoot) (${ROOT_COUNT}):${NC}"
+  echo -e "${RED}❌ Found pods potentially running as root (missing runAsNonRoot / runAsUser=0) (${ROOT_COUNT}):${NC}"
   ROOT_SAMPLES=$(printf '%s\n' "$ROOT_PODS" | head -n 5)
   echo "$ROOT_SAMPLES"
   if [[ "$ROOT_COUNT" -gt 5 ]]; then echo "...and more"; fi
