@@ -75,10 +75,12 @@ fi
 
 echo -e "\n${YELLOW}[2/4] Checking for Root Containers...${NC}"
 # Prefer runAsUser when set: runAsUser>0 without runAsNonRoot is not "potential root".
+# Flag pod if pod-level allows root AND any container/init/ephemeral looks root.
+# (Previously used `all`, which skipped mixed pods with one hardened + one root container.)
 ROOT_PODS=$(kubectl get pods --all-namespaces -o json \
   | jq -r '.items[] | select(
       ((.spec.securityContext.runAsNonRoot != true) and ((.spec.securityContext.runAsUser // 0) == 0))
-      and (all((.spec.containers + (.spec.initContainers // []))[]?;
+      and (any((.spec.containers + (.spec.initContainers // []) + (.spec.ephemeralContainers // []))[]?;
             (.securityContext.runAsNonRoot != true)
             and ((.securityContext.runAsUser // 0) == 0)))
     ) | "\(.metadata.namespace)/\(.metadata.name)"' \
