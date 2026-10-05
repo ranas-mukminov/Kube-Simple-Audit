@@ -49,6 +49,13 @@ if ! command -v jq &>/dev/null; then
   exit 1
 fi
 
+# Fetch pods once and fail closed: if kubectl can't reach the cluster or RBAC
+# forbids listing pods, every check would otherwise print a false "✅".
+if ! PODS_JSON=$(kubectl get pods --all-namespaces -o json); then
+  echo -e "${RED}Error: 'kubectl get pods --all-namespaces' failed (no cluster access or missing RBAC). Aborting instead of reporting a clean result.${NC}" >&2
+  exit 1
+fi
+
 PRIVILEGED_COUNT=0
 ROOT_COUNT=0
 NO_LIMITS_COUNT=0
@@ -60,7 +67,7 @@ DEFAULT_SAMPLES=""
 
 echo -e "\n${YELLOW}[1/4] Checking for Privileged Pods...${NC}"
 # Include initContainers / ephemeralContainers — privileged sidecars otherwise hide.
-PRIVILEGED=$(kubectl get pods --all-namespaces -o json \
+PRIVILEGED=$(printf '%s' "$PODS_JSON" \
   | jq -r '.items[] | select(any((.spec.containers + (.spec.initContainers // []) + (.spec.ephemeralContainers // []))[]?; .securityContext.privileged == true)) | "\(.metadata.namespace)/\(.metadata.name)"' \
   | sort -u || true)
 if [[ -z "$PRIVILEGED" ]]; then
@@ -77,7 +84,7 @@ echo -e "\n${YELLOW}[2/4] Checking for Root Containers...${NC}"
 # Prefer runAsUser when set: runAsUser>0 without runAsNonRoot is not "potential root".
 # Flag pod if pod-level allows root AND any container/init/ephemeral looks root.
 # (Previously used `all`, which skipped mixed pods with one hardened + one root container.)
-ROOT_PODS=$(kubectl get pods --all-namespaces -o json \
+ROOT_PODS=$(printf '%s' "$PODS_JSON" \
   | jq -r '.items[] | select(
       ((.spec.securityContext.runAsNonRoot != true) and ((.spec.securityContext.runAsUser // 0) == 0))
       and (any((.spec.containers + (.spec.initContainers // []) + (.spec.ephemeralContainers // []))[]?;
@@ -96,7 +103,7 @@ else
 fi
 
 echo -e "\n${YELLOW}[3/4] Checking for Missing Resource Limits...${NC}"
-NO_LIMITS=$(kubectl get pods --all-namespaces -o json \
+NO_LIMITS=$(printf '%s' "$PODS_JSON" \
   | jq -r '.items[] | select(any(.spec.containers[]?; .resources.limits == null)) | "\(.metadata.namespace)/\(.metadata.name)"' \
   | sort -u || true)
 if [[ -z "$NO_LIMITS" ]]; then
@@ -110,7 +117,9 @@ else
 fi
 
 echo -e "\n${YELLOW}[4/4] Checking for Workloads in 'default' Namespace...${NC}"
-DEFAULT_PODS=$(kubectl get pods -n default -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}' 2>/dev/null || true)
+DEFAULT_PODS=$(printf '%s' "$PODS_JSON" \
+  | jq -r '.items[] | select(.metadata.namespace == "default") | "\(.metadata.namespace)/\(.metadata.name)"' \
+  | sort -u)
 if [[ -z "$DEFAULT_PODS" ]]; then
   echo -e "${GREEN}✅ No workloads found in 'default' namespace.${NC}"
 else
