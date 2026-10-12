@@ -103,8 +103,9 @@ else
 fi
 
 echo -e "\n${YELLOW}[3/4] Checking for Missing Resource Limits...${NC}"
+# Include initContainers — native sidecars without limits still starve the node.
 NO_LIMITS=$(printf '%s' "$PODS_JSON" \
-  | jq -r '.items[] | select(any(.spec.containers[]?; .resources.limits == null)) | "\(.metadata.namespace)/\(.metadata.name)"' \
+  | jq -r '.items[] | select(any((.spec.containers + (.spec.initContainers // []))[]?; .resources.limits == null)) | "\(.metadata.namespace)/\(.metadata.name)"' \
   | sort -u || true)
 if [[ -z "$NO_LIMITS" ]]; then
   echo -e "${GREEN}✅ All pods have resource limits defined.${NC}"
