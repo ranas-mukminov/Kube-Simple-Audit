@@ -3,11 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bash](https://img.shields.io/badge/Language-Bash-blue.svg)](https://www.gnu.org/software/bash/)
 
-> 5-second security sanity check for K8s clusters. Zero dependencies beyond `kubectl` + `jq`.
+ > Lightweight Kubernetes configuration sanity checks. Requires `kubectl` and `jq`; execution time depends on cluster size.
 
-**60s proof:** with a working `kubectl` context, the one-liner prints privileged / non-root / limits / default-ns findings (and optionally writes `kube-simple-audit-report.md`) in under a minute.
+**What it checks:** with an authorized, working `kubectl` context, the script reports potentially privileged or root workloads, missing resource limits, and resources in the default namespace. It can export a Markdown report.
 
-**Kube-Simple-Audit** is a lightweight Bash lead-magnet for the Secure K3s Starter hub. It flags common misconfigurations and writes a **Markdown report** you can paste into tickets or GitHub Step Summary.
+**Kube-Simple-Audit** is a small, read-only Bash audit helper. It flags common misconfigurations and writes a **Markdown report** you can paste into tickets or GitHub Step Summary.
 
 [https://run-as-daemon.dev](https://run-as-daemon.dev) | [GitHub @ranas-mukminov](https://github.com/ranas-mukminov) | [Secure-K3s-GitOps-Template](https://github.com/ranas-mukminov/Secure-K3s-GitOps-Template)
 
@@ -66,7 +66,7 @@ Example job (copy into *your* workflow; needs cluster credentials you already ma
 
 1. Fix privileged / hostNetwork-style issues first.
 2. Codify `runAsNonRoot` + limits in Deployment templates.
-3. Add manifest CI via [k8s-security-gate](https://github.com/ranas-mukminov/k8s-security-gate) (fail on CRITICAL/HIGH).
+3. Review infrastructure manifests in CI. An example manifest scanning workflow is documented in [Secure-K3s-GitOps-Template](https://github.com/ranas-mukminov/Secure-K3s-GitOps-Template/blob/main/examples/ci/k8s-security-gate.yml).
 4. Bootstrap a Zero Trust baseline with [Secure-K3s-GitOps-Template](https://github.com/ranas-mukminov/Secure-K3s-GitOps-Template).
 
 ## Commercial follow-up
@@ -76,9 +76,11 @@ Need a deeper analysis or a guided Starter pack?
 - **[Express Audit + Hardening](https://run-as-daemon.dev/en/services/express-audit-hardening.html)**
 - Telegram: [@run_as_daemon_dev](https://t.me/run_as_daemon_dev)
 
-## Privacy
+## Privacy and limitations
 
-Runs entirely with your local `kubectl`. No data leaves your machine unless you upload the report yourself.
+The script queries Kubernetes using your current kubeconfig and does not send the findings to an external service. **Do not use an administrative kubeconfig unless required.** Output reports can contain namespace, workload, and context names; redact them before sharing.
+
+This is a small set of configuration checks, **not** a complete security assessment, penetration test, or CIS benchmark implementation. Review the findings in context.
 
 ## License
 
