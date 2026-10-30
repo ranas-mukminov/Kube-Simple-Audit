@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Safe offline regression tests. No Kubernetes cluster or network access required.
-set -euxo pipefail
+set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d)"
@@ -69,7 +69,7 @@ export FAKE_PODS_FILE="$TMP/pods.json"
 bash "$REPO_ROOT/audit.sh" --markdown -o "$TMP/report.md" > "$TMP/audit.stdout"
 
 grep -Fq 'Found privileged pods (1)' "$TMP/audit.stdout"
-grep -Fq 'Found pods potentially running as root (1)' "$TMP/audit.stdout"
+grep -Fq 'Found pods potentially running as root (missing runAsNonRoot / runAsUser=0) (1)' "$TMP/audit.stdout"
 grep -Fq 'Found pods without resource limits (1)' "$TMP/audit.stdout"
 grep -Fq "Found workloads in 'default' namespace (1)" "$TMP/audit.stdout"
 
