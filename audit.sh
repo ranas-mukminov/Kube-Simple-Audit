@@ -174,7 +174,7 @@ write_md() {
     echo "1. Fix CRITICAL-looking items first (privileged / host namespaces)."
     echo "2. Add \`runAsNonRoot\` + resource limits in your Deployment templates."
     echo "3. Move workloads out of \`default\` into dedicated namespaces."
-    echo "4. Wire manifest CI with [k8s-security-gate](https://github.com/ranas-mukminov/k8s-security-gate) before deploy."
+    echo "4. Review the public [K3s CI manifest-scanning example](https://github.com/ranas-mukminov/Secure-K3s-GitOps-Template/blob/main/examples/ci/k8s-security-gate.yml) before deployment."
     echo "5. Bootstrap a secure baseline with the [Secure K3s GitOps Template](${STARTER_URL})."
     echo ""
     echo "## Commercial follow-up"
