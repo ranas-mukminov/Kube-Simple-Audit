@@ -13,9 +13,22 @@
 
 ---
 
-## One-liner
+## Getting started (review before running)
 
-Requires a working `kubectl` context and `jq`:
+Use a Kubernetes context for a cluster you own or have explicit permission to inspect. Run the script with the least privilege that permits listing Pods.
+
+Recommended: clone, read and run the script locally:
+
+```bash
+git clone https://github.com/ranas-mukminov/Kube-Simple-Audit.git
+cd Kube-Simple-Audit
+less audit.sh
+bash audit.sh --markdown -o report.md
+```
+
+### Convenience one-liner
+
+Only use this after reviewing the script and accepting the supply-chain risk of executing downloaded code. Requires `kubectl` and `jq`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ranas-mukminov/Kube-Simple-Audit/main/audit.sh | bash
@@ -81,6 +94,10 @@ Need a deeper analysis or a guided Starter pack?
 The script queries Kubernetes using your current kubeconfig and does not send the findings to an external service. **Do not use an administrative kubeconfig unless required.** Output reports can contain namespace, workload, and context names; redact them before sharing.
 
 This is a small set of configuration checks, **not** a complete security assessment, penetration test, or CIS benchmark implementation. Review the findings in context.
+
+## Responsible disclosure
+
+See [SECURITY.md](SECURITY.md) for private reporting, safe testing and project support limitations.
 
 ## License
 
