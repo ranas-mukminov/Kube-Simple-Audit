@@ -1,0 +1,23 @@
+name: Audit checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test requirements
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+      - name: Check Bash syntax
+        run: bash -n audit.sh tests/test_audit.sh
+      - name: Exercise offline Kubernetes fixtures
+        run: bash tests/test_audit.sh
