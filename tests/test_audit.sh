@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Safe offline regression tests. No Kubernetes cluster or network access required.
-set -euo pipefail
+set -euxo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TMP="$(mktemp -d)"
