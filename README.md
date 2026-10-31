@@ -1,3 +1,23 @@
+> **Problem:** a Kubernetes cluster quietly drifts into privileged workloads, root execution, missing resource limits and workloads in the default namespace.
+>
+> **What this is:** a lightweight, read-only Bash Kubernetes audit helper that flags those misconfigurations and writes a Markdown report.
+>
+> **Who it is for:** SMB and fintech teams running a cluster they own or have explicit permission to inspect.
+>
+> **Quickstart:**
+>
+> ```bash
+> git clone https://github.com/ranas-mukminov/Kube-Simple-Audit.git
+> cd Kube-Simple-Audit
+> bash tests/test_audit.sh
+> ./audit.sh --markdown -o report.md
+> ```
+>
+> The audit run needs an authorised, working `kubectl` context with least privilege to list Pods. **Sample result (verified):** `OK: risky fixture, clean fixture, and permission-denied paths` from the test suite.
+>
+[![CI](https://github.com/ranas-mukminov/Kube-Simple-Audit/actions/workflows/ci.yml/badge.svg)](https://github.com/ranas-mukminov/Kube-Simple-Audit/actions)
+
+---
 # Kube-Simple-Audit ☸️
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
